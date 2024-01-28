@@ -44,6 +44,11 @@ cv2.createTrackbar('Ecart Max Ligne', SCREEN_1, 10, 100, update_image)
 initialized = True
 update_image()
 
+
+
+
+
+
 # Boucle d'affichage
 while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
