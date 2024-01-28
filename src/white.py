@@ -32,15 +32,12 @@ def removeBiggestElementsOnBinaryImage(image):
     # Apply dilation
     kernel = np.ones((7, 7), np.uint8)
     dilation = cv2.dilate(erosion, kernel, iterations=15)
-    imshow(dilation)
+    #imshow(dilation)
     # Negate images
     dilation = cv2.bitwise_not(dilation)
     # Apply AND operation
     andOperation = cv2.bitwise_and(dilation, duplicatedImage)
     return andOperation
-
-
-
 
 # Charger l'image
 image = cv2.imread(r"C:\Users\Maxime\Documents\Github\parking-detektor\res\images\7.png")
@@ -69,7 +66,7 @@ imshow(binary)
 
 processed = removeBiggestElementsOnBinaryImage(binary)
 
-imshow(processed)
+#imshow(processed)
 
 
 cv2.waitKey(0)
@@ -91,7 +88,7 @@ for line in lines:
 
 
 # Afficher l'image
-imshow(binary)
+#imshow(binary)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
