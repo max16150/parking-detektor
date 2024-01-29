@@ -38,6 +38,7 @@ images = [
     "5.png",
     "6.png",
     "7.png",
+    "8.png",
 ]
 
 # Charger l'image
@@ -220,6 +221,7 @@ def find_intersections(*args):
 
     if(len(clusters) < 2):
         globalFindIntersectionsResult = []
+        cv2.imshow(SCREEN_FIND_INTERSECTIONS, imageCopy)
         return
 
     intersections = []
@@ -242,7 +244,7 @@ def find_intersections(*args):
 
     # Afficher les intersections
     for point in intersections:
-        cv2.circle(imageCopy, (int(point.x), int(point.y)), 10, (0, 0, 255), -1)
+        cv2.circle(imageCopy, (int(point.x), int(point.y)), 4, (0, 0, 255), -1)
 
     cv2.imshow(SCREEN_FIND_INTERSECTIONS, imageCopy)
     globalFindIntersectionsResult = intersections
