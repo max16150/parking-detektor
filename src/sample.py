@@ -305,8 +305,6 @@ def isolate_places(*args):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     dilation = cv2.dilate(erosion, kernel, iterations=dilationIterations)
 
-    cv2.imshow('pouet pouet', dilation)
-
     # Negate images
     dilation = cv2.bitwise_not(dilation)
     globalIsolatePlacesResult = dilation
