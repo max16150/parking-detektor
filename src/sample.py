@@ -43,12 +43,16 @@ SCREEN_FIND_CARS_CONTROL = 'Controlleur trouver voitures' + str(ITERATION)
 SCREEN_FIND_CARS = 'Trouver voitures' + str(ITERATION)
 globalFindCarsResult = None
 
+SCREEN_DEFINE_FREE_PLACES_CONTROL = 'Controlleur definir places libres' + str(ITERATION)
+SCREEN_DEFINE_FREE_PLACES = 'Definir places libres' + str(ITERATION)
+globalDefineFreePlacesResult = None
+
 images = [
     "1.jpg",
     "2.png",
     "3.png",
     "4.png",
-    "5.png",
+    "41.png",
     "6.png",
     "7.png",
     "8.png",
@@ -83,9 +87,9 @@ def init_hsv_control():
     cv2.namedWindow(SCREEN_HSV)
     cv2.createTrackbar('Hue Bas', SCREEN_HSV_CONTROL, 0, 255, update_hsv)
     cv2.createTrackbar('Saturation Bas', SCREEN_HSV_CONTROL, 0, 255, update_hsv)
-    cv2.createTrackbar('Value Bas', SCREEN_HSV_CONTROL, 210, 255, update_hsv)
-    cv2.createTrackbar('Hue Haut', SCREEN_HSV_CONTROL, 255, 255, update_hsv)
-    cv2.createTrackbar('Saturation Haut', SCREEN_HSV_CONTROL, 75, 255, update_hsv)
+    cv2.createTrackbar('Value Bas', SCREEN_HSV_CONTROL, 180, 255, update_hsv)
+    cv2.createTrackbar('Hue Haut', SCREEN_HSV_CONTROL, 200, 255, update_hsv)
+    cv2.createTrackbar('Saturation Haut', SCREEN_HSV_CONTROL, 25, 255, update_hsv)
     cv2.createTrackbar('Value Haut', SCREEN_HSV_CONTROL, 255, 255, update_hsv)
 
 def update_hsv(*args):
@@ -301,6 +305,8 @@ def isolate_places(*args):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     dilation = cv2.dilate(erosion, kernel, iterations=dilationIterations)
 
+    cv2.imshow('pouet pouet', dilation)
+
     # Negate images
     dilation = cv2.bitwise_not(dilation)
     globalIsolatePlacesResult = dilation
@@ -356,6 +362,7 @@ def find_polygons(*args):
     globalFindPolygonsResult = sortedPolygons
     
     cv2.imshow(SCREEN_FIND_POLYGONS, outputImage)
+    define_free_places()
 
 def init_find_cars_control():
     cv2.namedWindow(SCREEN_FIND_CARS_CONTROL)
@@ -366,8 +373,8 @@ def init_find_cars_control():
     cv2.createTrackbar('Hue Haut', SCREEN_FIND_CARS_CONTROL, 71, 255, find_cars)
     cv2.createTrackbar('Saturation Haut', SCREEN_FIND_CARS_CONTROL, 85, 255, find_cars)
     cv2.createTrackbar('Value Haut', SCREEN_FIND_CARS_CONTROL, 196, 255, find_cars)
-    cv2.createTrackbar('Erosion', SCREEN_FIND_CARS_CONTROL, 1, 20, find_cars)
-    cv2.createTrackbar('Dilatation', SCREEN_FIND_CARS_CONTROL, 1, 20, find_cars)
+    cv2.createTrackbar('Erosion', SCREEN_FIND_CARS_CONTROL, 3, 20, find_cars)
+    cv2.createTrackbar('Dilatation', SCREEN_FIND_CARS_CONTROL, 7, 20, find_cars)
 
 def find_cars(*args):
     global globalFindPolygonsResult
@@ -407,9 +414,60 @@ def find_cars(*args):
     cv2.imshow(SCREEN_FIND_CARS, Hori)
 
     globalFindCarsResult = dilation
+    define_free_places()
+
+def init_define_free_places_control():
+    cv2.namedWindow(SCREEN_DEFINE_FREE_PLACES_CONTROL)
+    cv2.namedWindow(SCREEN_DEFINE_FREE_PLACES)
+
+def define_free_places(*args):
+    global globalFindCarsResult
+    global globalFindPolygonsResult
+    global globalDefineFreePlacesResult
+    global image
+    if not initialized: return
+
+    if globalFindCarsResult is None or globalFindPolygonsResult is None: 
+        cv2.imshow(SCREEN_DEFINE_FREE_PLACES, image)
+        return
+
+    # Pour chaque polygone de place dans globalFindPolygonsResult, trouver le nombre de pixels blancs dans globalFindCarsResult
+    # Si le nombre de pixels blancs est inférieur à un certain seuil, alors la place est libre
+    # Sinon, la place est occupée
+
+    places = globalFindPolygonsResult.copy()
+    cars = globalFindCarsResult.copy()
+    outputImage = image.copy()
+
+    freePlaces = 0
+    occupiedPlaces = 0
+
+    for place in places:
+        # Trouver le nombre de pixels blancs dans la place binaire
+        mask = np.zeros(cars.shape[:2], np.uint8)
+        cv2.fillPoly(mask, [place], 255)
+        maskedCars = cv2.bitwise_and(cars, cars, mask=mask)
+        maskedCars = cv2.cvtColor(maskedCars, cv2.COLOR_BGR2GRAY)
+
+        whitePixels = cv2.countNonZero(maskedCars)
+
+        if whitePixels < 100:
+            # La place est libre
+            freePlaces += 1
+            cv2.drawContours(outputImage, [place], 0, (0, 255, 0), 2)
+        else:
+            # La place est occupée
+            occupiedPlaces += 1
+            cv2.drawContours(outputImage, [place], 0, (0, 0, 255), 2)
+
+    # Ecrire le nombre de places libres sur l'image
+    cv2.putText(outputImage, 'Places libres : ' + str(freePlaces), (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
+
+    # Ecrire le nombre de places occupées sur l'image
+    cv2.putText(outputImage, 'Places occupees : ' + str(occupiedPlaces), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
 
 
-
+    cv2.imshow(SCREEN_DEFINE_FREE_PLACES, outputImage)
 
 
 def first_run():
@@ -422,6 +480,7 @@ def first_run():
     init_isolate_places_control()
     init_find_polygons_control()
     init_find_cars_control()
+    init_define_free_places_control()
     global initialized
     initialized = True
     image_selectors()
